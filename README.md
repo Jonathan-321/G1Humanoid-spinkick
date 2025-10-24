@@ -1,97 +1,118 @@
-# mjlab example: Unitree G1 Double Spin Kick
+# G1 Humanoid Spinkick Training 🤸‍♂️
 
-![Sim-to-real double spin kick comparison](assets/teaser.gif)
+Train a Unitree G1 humanoid robot to perform dynamic spin kicks using reinforcement learning!
 
-An example of building on top of [mjlab](https://github.com/mujocolab/mjlab) to teach a Unitree G1 humanoid to perform a **double spin kick**. The reference motion comes from Jason Peng's [MimicKit](https://github.com/xbpeng/MimicKit).
+![Spinkick Demo](assets/teaser.gif)
 
-**This repository provides:**
-- Data conversion script (MimicKit pkl → mjlab csv)
-- Full training results and hyperparameters
-- Pretrained ONNX checkpoint for deployment
-- Deployment instructions for real hardware
+## 🚀 Quick Start
 
-> ⚠️ **Disclaimer**
->
-> This repository is provided as-is for educational purposes. We do not take any responsibility for damage to property or injury to persons that may occur from attempting to replicate the results shown here. Please exercise caution and good judgement when working with hardware.
+### Option 1: Google Colab (Recommended)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Jonathan-321/G1Humanoid-spinkick/blob/main/g1_spinkick_training_colab.ipynb)
 
-## Installation
+1. Click the badge above to open in Colab
+2. Change runtime to GPU (Runtime → Change runtime type → T4)
+3. Run all cells
+4. Watch your robot learn to spin kick!
 
-1. Clone mjlab:
-
-```bash
-git clone https://github.com/mujocolab/mjlab
-```
-
-2. Clone this repo:
+### Option 2: Local Training (Advanced)
+Requires NVIDIA GPU with CUDA support.
 
 ```bash
-git clone https://github.com/mujocolab/g1_spinkick_example.git
-cd g1_spinkick_example
+# Clone the repository
+git clone https://github.com/Jonathan-321/G1Humanoid-spinkick.git
+cd G1Humanoid-spinkick
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run training
+python train.py
 ```
 
-3. Install mjlab as an editable package:
+## 📁 Project Structure
 
+```
+G1Humanoid-spinkick/
+├── g1_spinkick_training_colab.ipynb  # Main training notebook (start here!)
+├── spinkick_example/                  # Custom environment configs
+│   └── spinkick_env_cfg.py           # Spinkick-specific settings
+├── modal_train_spinkick.py           # Cloud training with Modal
+├── isaac_gym_spinkick.py             # Isaac Gym implementation
+├── pkl_to_csv.py                     # Motion data converter
+├── spinkick_motion.csv               # Reference motion data
+└── spinkick_safe.onnx               # Pre-trained model
+```
+
+## 🎯 What This Does
+
+1. **Motion Imitation Learning**: Teaches the G1 humanoid to perform a double spin kick
+2. **Reference Motion**: Uses motion capture data converted from MimicKit format
+3. **RL Algorithm**: PPO (Proximal Policy Optimization) for stable training
+4. **Safety**: Includes smooth transitions and angular velocity limits
+
+## 🛠️ Technical Details
+
+### Environment
+- **Robot**: Unitree G1 humanoid (simplified model)
+- **Physics**: MuJoCo simulator
+- **Action Space**: 14 joint actuators
+- **Observation Space**: Joint positions, velocities, and reference pose
+- **Reward**: Motion tracking + stability + energy efficiency
+
+### Training
+- **Algorithm**: PPO with Stable Baselines3
+- **Parallel Envs**: 256 (scalable)
+- **GPU**: T4/A100 recommended
+- **Training Time**: ~30 minutes on Colab
+
+## 📊 Results
+
+After training, the robot learns to:
+- Execute a full 360° spin kick
+- Maintain balance during dynamic motion
+- Follow the reference trajectory closely
+- Recover to standing position
+
+## 🔧 Advanced Usage
+
+### Custom Motion Data
+```python
+# Convert your own motion data
+python pkl_to_csv.py --pkl-file your_motion.pkl --csv-file output.csv
+```
+
+### Modal Cloud Training
 ```bash
-uv add --editable ../mjlab
+# Train on Modal with A100 GPU
+modal run modal_train_spinkick.py --num-envs 256 --max-iterations 2000
 ```
 
-## Data Conversion
-
-Download the spin kick data using the link referenced in the MimicKit [installation instructions](https://github.com/xbpeng/MimicKit?tab=readme-ov-file#installation).
-
-The conversion script adds smooth transitions from a safe standing pose at the start and end of the motion to ensure safe deployment. Since the motion is cyclic, we also repeat it to reach the desired duration.
-
-```bash
-# Convert pkl to csv
-uv run pkl_to_csv.py \
-    --pkl-file g1_spinkick.pkl \
-    --csv-file g1_spinkick.csv \
-    --duration 2.65 \
-    --add-start-transition \
-    --add-end-transition \
-    --transition-duration 0.5 \
-    --pad-duration 1.0
-
-# Convert csv to npz
-MUJOCO_GL=egl uv run -m mjlab.scripts.csv_to_npz \
-    --input-file g1_spinkick.csv \
-    --output-name mimickit_spinkick_safe \
-    --input-fps 60 \
-    --output-fps 50 \
-    --render
+### Isaac Gym (Local Only)
+```python
+# Requires Isaac Gym installation
+python isaac_gym_spinkick.py
 ```
 
-This will upload the motion to your wandb registry and create a video showing the reference motion like the one below:
+## 📚 Based On
 
-![spinkick reference](assets/motion.gif)
+- [mjlab](https://github.com/mujocolab/mjlab) - RL framework
+- [MimicKit](https://github.com/xbpeng/MimicKit) - Motion data source
+- [Unitree G1](https://www.unitree.com/g1) - Humanoid robot
 
-## Training
+## 🤝 Contributing
 
-Follow the registry creation instructions in the mjlab [README](https://github.com/mujocolab/mjlab?tab=readme-ov-file#2-motion-imitation).
+Contributions welcome! Please feel free to submit a Pull Request.
 
-```bash
-MUJOCO_GL=egl CUDA_VISIBLE_DEVICES=0 uv run train.py \
-    Mjlab-Spinkick-Unitree-G1 \
-    --registry-name {your-organization}/{registry-name}/mimickit_spinkick_safe \
-    --env.scene.num-envs 4096 \
-    --agent.max-iterations 20_000
-```
+## 📝 License
 
-For full training details and reproducibility, see the [wandb report](https://api.wandb.ai/links/gcbc_researchers/nfi58457).
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## Evaluation
+## 🙏 Acknowledgments
 
-To evaluate your trained policy, you'll need your wandb run path. You can find this in the run overview. It follows the format `{your-organization}/{project-name}/{run-id}`, where `run-id` is a unique 8-character identifier.
+- MuJoCo team for the physics simulator
+- Unitree Robotics for the G1 robot model
+- Jason Peng for the MimicKit motion data
 
-Once you have your run path, evaluate the policy with:
+---
 
-```bash
-uv run play.py \
-    Mjlab-Spinkick-Unitree-G1-Play \
-    --wandb-run-path {wandb-run-path} \
-    --num-envs 8
-```
-
-## Deployment
-
-We use [motion_tracking_controller](https://github.com/HybridRobotics/motion_tracking_controller) to deploy the trained policy. An ONNX file is provided for convenience, though one will also be generated in your wandb artifacts. Download it and follow the instructions in the motion_tracking_controller repo.
+**Made with 🤖 by Jonathan Muhire**

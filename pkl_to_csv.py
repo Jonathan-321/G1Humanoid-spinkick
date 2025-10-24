@@ -82,8 +82,13 @@ def main(
     unpickler = RobustUnpickler(f)
     data = unpickler.load()
 
-  frames = data.frames
-  fps = data.fps
+  # Handle both object format and dict format
+  if hasattr(data, 'frames'):
+    frames = data.frames
+    fps = data.fps
+  else:
+    frames = data['frames']
+    fps = data['fps']
   original_duration = frames.shape[0] / fps
 
   print(f"Loaded motion with shape: {frames.shape}")

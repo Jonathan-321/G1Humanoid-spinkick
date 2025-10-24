@@ -1,5 +1,60 @@
-g1_spinkick.csv
-wandb/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Training outputs
+wandb/
+tensorboard/
 logs/
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+
+# Data
+*.pkl
 *.npz
+
+# Videos/Images
+*.mp4
+*.avi
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Modal
+.modal/
+modal_cache/
+
+# Failed attempts
+failed_attempts/
+
+# mjlab submodule
+mjlab/
+
+# UV/Python package managers
+.venv/
+uv.lock
+*.egg-info/
+dist/
+build/
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+EOF < /dev/null
